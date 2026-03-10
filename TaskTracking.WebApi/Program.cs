@@ -19,6 +19,12 @@ builder.Services.AddScoped<ICompanyDal, EfCompanyDal>();
 builder.Services.AddScoped<ITaskStaffService, TaskStaffManager>();
 builder.Services.AddScoped<ITaskStaffDal, EfTaskStaffDal>();
 
+builder.Services.AddScoped<IDepartmentService, DepartmentManager>();
+builder.Services.AddScoped<IDepartmentDal, EfDepartmentDal>();
+
+builder.Services.AddScoped<ITaskStatusService, TaskStatusManager>();
+builder.Services.AddScoped<ITaskStatusDal, EfTaskStatusDal>();
+
 // YENÝ: Priority (Öncelik) Servisleri
 builder.Services.AddScoped<IPriorityService, PriorityManager>();
 builder.Services.AddScoped<IPriorityDal, EfPriorityDal>();

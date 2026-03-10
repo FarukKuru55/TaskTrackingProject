@@ -15,6 +15,8 @@ namespace TaskTracking.DataAccess.Concrete.EntityFramework
         public DbSet<Company> Companies { get; set; }
         public DbSet<TaskStaff> TaskStaffs { get; set; }
         public DbSet<Priority> Priorities { get; set; }
+        public DbSet<Department> Departments { get; set; }
+        public DbSet<TaskTracking.Core.Entities.Concrete.TaskStatus> TaskStatuses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

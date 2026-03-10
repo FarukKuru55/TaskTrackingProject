@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskTracking.DataAccess.Concrete.EntityFramework;
 
@@ -11,9 +12,11 @@ using TaskTracking.DataAccess.Concrete.EntityFramework;
 namespace TaskTracking.DataAccess.Migrations
 {
     [DbContext(typeof(TaskTrackingContext))]
-    partial class TaskTrackingContextModelSnapshot : ModelSnapshot
+    [Migration("20260310082757_AddDepartmentTable")]
+    partial class AddDepartmentTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -41,23 +44,6 @@ namespace TaskTracking.DataAccess.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Companies");
-                });
-
-            modelBuilder.Entity("TaskTracking.Core.Entities.Concrete.Department", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Departments");
                 });
 
             modelBuilder.Entity("TaskTracking.Core.Entities.Concrete.Priority", b =>
@@ -163,27 +149,6 @@ namespace TaskTracking.DataAccess.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("TaskStaffs");
-                });
-
-            modelBuilder.Entity("TaskTracking.Core.Entities.Concrete.TaskStatus", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ColorCode")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TaskStatuses");
                 });
 #pragma warning restore 612, 618
         }
