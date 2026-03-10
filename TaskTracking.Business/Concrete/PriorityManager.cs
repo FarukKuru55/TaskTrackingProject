@@ -18,5 +18,17 @@ namespace TaskTracking.Business.Concrete
             _priorityDal.AddAsync(priority).GetAwaiter().GetResult();
             return new SuccessResult("Öncelik eklendi.");
         }
+
+        public IResult Update(Priority priority)
+        {
+            _priorityDal.Update(priority);
+            return new SuccessResult("Öncelik güncellendi.");
+        }
+
+        public IResult Delete(Priority priority)
+        {
+            _priorityDal.Delete(priority);
+            return new SuccessResult("Öncelik silindi.");
+        }
     }
 }

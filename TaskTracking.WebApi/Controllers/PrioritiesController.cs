@@ -19,16 +19,28 @@ namespace TaskTracking.WebApi.Controllers
         public IActionResult GetAll()
         {
             var result = _priorityService.GetAll();
-            if (result.Success) return Ok(result);
-            return BadRequest(result);
+            return result.Success ? Ok(result) : BadRequest(result);
         }
 
         [HttpPost("add")]
         public IActionResult Add(Priority priority)
         {
             var result = _priorityService.Add(priority);
-            if (result.Success) return Ok(result);
-            return BadRequest(result);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        [HttpPut("update")]
+        public IActionResult Update(Priority priority)
+        {
+            var result = _priorityService.Update(priority);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        [HttpDelete("delete")]
+        public IActionResult Delete(Priority priority)
+        {
+            var result = _priorityService.Delete(priority);
+            return result.Success ? Ok(result) : BadRequest(result);
         }
     }
 }

@@ -9,12 +9,17 @@ var builder = WebApplication.CreateBuilder(args);
 // --- Servis Kayýtlarý (Dependency Injection) ---
 builder.Services.AddScoped<ITaskItemService, TaskManager>();
 builder.Services.AddScoped<ITaskItemDal, EfTaskItemDal>();
+
 builder.Services.AddScoped<IStaffService, StaffManager>();
 builder.Services.AddScoped<IStaffDal, EfStaffDal>();
+
 builder.Services.AddScoped<ICompanyService, CompanyManager>();
 builder.Services.AddScoped<ICompanyDal, EfCompanyDal>();
+
 builder.Services.AddScoped<ITaskStaffService, TaskStaffManager>();
 builder.Services.AddScoped<ITaskStaffDal, EfTaskStaffDal>();
+
+// YENÝ: Priority (Öncelik) Servisleri
 builder.Services.AddScoped<IPriorityService, PriorityManager>();
 builder.Services.AddScoped<IPriorityDal, EfPriorityDal>();
 
@@ -29,6 +34,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// --- Middleware (Ara Katman) Ayarlarý ---
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -38,4 +44,5 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+
 app.Run();

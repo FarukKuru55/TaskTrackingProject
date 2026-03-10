@@ -7,5 +7,7 @@ namespace TaskTracking.Business.Abstract
     {
         IDataResult<List<Priority>> GetAll();
         IResult Add(Priority priority);
+        IResult Update(Priority priority);
+        IResult Delete(Priority priority);
     }
 }
