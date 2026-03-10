@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using TaskTracking.Business.Abstract;
 using TaskTracking.Core.Entities.Concrete;
+using TaskTracking.Core.DTOs.TaskItem;
 
 namespace TaskTracking.WebApi.Controllers
 {
@@ -23,10 +24,18 @@ namespace TaskTracking.WebApi.Controllers
             return BadRequest(result);
         }
 
-        [HttpPost("add")]
-        public IActionResult Add(TaskItem taskItem)
+        [HttpGet("gettaskdetails")] // <-- Bunu ekledik
+        public IActionResult GetTaskDetails()
         {
-            var result = _taskItemService.Add(taskItem);
+            var result = _taskItemService.GetTaskDetails();
+            if (result.Success) return Ok(result);
+            return BadRequest(result);
+        }
+
+        [HttpPost("add")]
+        public IActionResult Add(TaskItemCreateDto taskItemCreateDto) // <-- Parametreyi DTO yaptık
+        {
+            var result = _taskItemService.Add(taskItemCreateDto);
             if (result.Success) return Ok(result);
             return BadRequest(result);
         }
@@ -54,6 +63,5 @@ namespace TaskTracking.WebApi.Controllers
             if (result.Success) return Ok(result);
             return BadRequest(result);
         }
-
     }
 }

@@ -12,5 +12,7 @@ namespace TaskTracking.Core.Entities.Concrete
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? CompletedDate { get; set; }
         public bool IsCompleted { get; set; } = false;
+        public int PriorityId { get; set; }
+        public int TaskStatusId { get; set; }
     }
 }
