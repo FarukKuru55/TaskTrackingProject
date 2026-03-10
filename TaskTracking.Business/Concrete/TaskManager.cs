@@ -10,9 +10,10 @@ namespace TaskTracking.Business.Concrete
         private readonly ITaskItemDal _taskItemDal;
         private readonly ITaskStaffDal _taskStaffDal;
 
-        public TaskManager(ITaskItemDal taskItemDal)
+        public TaskManager(ITaskItemDal taskItemDal, ITaskStaffDal taskStaffDal)
         {
             _taskItemDal = taskItemDal;
+            _taskStaffDal = taskStaffDal;
         }
 
         public IResult Add(TaskItem taskItem)
@@ -38,15 +39,13 @@ namespace TaskTracking.Business.Concrete
             if (task == null) return new ErrorResult("Görev bulunamadı!");
 
             // 2. YETKİ KONTROLÜ: Bu personel bu göreve atanmış mı?
-            // Bu kontrol için ITaskStaffDal'a ihtiyacımız olacak veya bir Business kuralı yazacağız.
-            // Şimdilik mantığı buraya kuruyoruz:
             var isStaffAssigned = CheckIfStaffAssignedToTask(taskId, staffId);
             if (!isStaffAssigned)
             {
                 return new ErrorResult("Bu görevi bitirme yetkiniz yok! Sadece atanan personeller bitirebilir.");
             }
 
-            // 3. ZORUNLULUK KONTROLÜ (Senin istediğin Belge/Açıklama kuralı)
+            // 3. ZORUNLULUK KONTROLÜ (Açıklama ve Belge kuralı)
             if (string.IsNullOrEmpty(description) || description.Length < 10)
                 return new ErrorResult("Görev biterken en az 10 karakterlik açıklama zorunludur!");
 
@@ -63,10 +62,11 @@ namespace TaskTracking.Business.Concrete
             return new SuccessResult("Görev personeli tarafından başarıyla tamamlandı.");
         }
 
+        // Yardımcı Metot: Atama kontrolünü veritabanından yapar
         private bool CheckIfStaffAssignedToTask(int taskId, int staffId)
         {
             var result = _taskStaffDal.GetAllAsync(ts => ts.TaskItemId == taskId && ts.StaffId == staffId)
-               .GetAwaiter().GetResult();
+                                      .GetAwaiter().GetResult();
             return result.Any();
         }
 

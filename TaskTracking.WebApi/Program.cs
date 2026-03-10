@@ -15,6 +15,8 @@ builder.Services.AddScoped<ICompanyService, CompanyManager>();
 builder.Services.AddScoped<ICompanyDal, EfCompanyDal>();
 builder.Services.AddScoped<ITaskStaffService, TaskStaffManager>();
 builder.Services.AddScoped<ITaskStaffDal, EfTaskStaffDal>();
+builder.Services.AddScoped<IPriorityService, PriorityManager>();
+builder.Services.AddScoped<IPriorityDal, EfPriorityDal>();
 
 // --- MySQL Veritabaný Baðlantýsý ---
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
