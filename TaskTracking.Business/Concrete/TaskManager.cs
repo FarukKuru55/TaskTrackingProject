@@ -8,6 +8,7 @@ namespace TaskTracking.Business.Concrete
     public class TaskManager : ITaskItemService
     {
         private readonly ITaskItemDal _taskItemDal;
+        private readonly ITaskStaffDal _taskStaffDal;
 
         public TaskManager(ITaskItemDal taskItemDal)
         {
@@ -62,12 +63,11 @@ namespace TaskTracking.Business.Concrete
             return new SuccessResult("Görev personeli tarafından başarıyla tamamlandı.");
         }
 
-        // Yardımcı metodumuz (Bunu ileride TaskStaffManager'a taşıyabiliriz)
         private bool CheckIfStaffAssignedToTask(int taskId, int staffId)
         {
-            // Burada TaskStaff tablosuna gidip taskId ve staffId eşleşiyor mu bakacağız
-            // Şimdilik test için true dönüyoruz, birazdan ITaskStaffDal'ı buraya bağlayacağız
-            return true;
+            var result = _taskStaffDal.GetAllAsync(ts => ts.TaskItemId == taskId && ts.StaffId == staffId)
+               .GetAwaiter().GetResult();
+            return result.Any();
         }
 
         public IResult Update(TaskItem taskItem)
