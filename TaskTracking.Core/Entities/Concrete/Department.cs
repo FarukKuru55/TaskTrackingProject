@@ -1,5 +1,5 @@
-﻿using TaskTracking.Core.Entities.Abstract;
-
+﻿using TaskTracking.Core.Entities.Abstract; 
+ 
 namespace TaskTracking.Core.Entities.Concrete
 {
     public class Department : IEntity
