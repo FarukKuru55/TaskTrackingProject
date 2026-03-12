@@ -10,7 +10,7 @@ namespace TaskTracking.Business.Abstract
         IDataResult<List<TaskItemDetailDto>> GetTaskDetails(); // Yazım hatası düzeltildi
         IDataResult<TaskItem> GetById(int id);
         IResult Add(TaskItemCreateDto taskItemCreateDto); // Noktalı virgül eklendi
-        IResult Update(TaskItem taskItem);
+        IResult Update(TaskItemUpdateDto dto);
         IResult Delete(TaskItem taskItem);
         IResult CompleteTask(int taskId, int staffId, string description, string documentUrl);
     }

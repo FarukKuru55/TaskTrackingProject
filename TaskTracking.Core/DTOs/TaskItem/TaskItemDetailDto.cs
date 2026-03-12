@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TaskTracking.Core.DTOs.TaskItem
 {
@@ -12,13 +9,19 @@ namespace TaskTracking.Core.DTOs.TaskItem
         public string Title { get; set; }
         public string Description { get; set; }
         public DateTime DueDate { get; set; }
-
-        // ID yerine isim dönüyoruz
-        public string PriorityName { get; set; }    // "Yüksek"
-        public string TaskStatusName { get; set; }  // "Beklemede"
+        public string PriorityName { get; set; }
+        public string TaskStatusName { get; set; }
         public string CompanyName { get; set; }
 
-        // Atanan personeller
+        // ID'ler — güncelleme formunda lazım
+        public int PriorityId { get; set; }
+        public int TaskStatusId { get; set; }
+        public int CompanyId { get; set; }
+
+        // Atanan personel isimleri
         public List<string> AssignedStaffs { get; set; }
+
+        // Atanan personel ID'leri
+        public List<int> AssignedStaffIds { get; set; }
     }
 }

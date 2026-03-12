@@ -24,7 +24,7 @@ namespace TaskTracking.WebApi.Controllers
             return BadRequest(result);
         }
 
-        [HttpGet("gettaskdetails")] // <-- Bunu ekledik
+        [HttpGet("gettaskdetails")]
         public IActionResult GetTaskDetails()
         {
             var result = _taskItemService.GetTaskDetails();
@@ -49,17 +49,21 @@ namespace TaskTracking.WebApi.Controllers
         }
 
         [HttpPut("update")]
-        public IActionResult Update(TaskItem taskItem)
+        public IActionResult Update([FromBody] TaskItemUpdateDto taskItemUpdateDto) 
         {
-            var result = _taskItemService.Update(taskItem);
+            var result = _taskItemService.Update(taskItemUpdateDto);
             if (result.Success) return Ok(result);
             return BadRequest(result);
         }
 
         [HttpDelete("delete")]
-        public IActionResult Delete(TaskItem taskItem)
+        public IActionResult Delete(int id) // <-- Sadece int id beklesin
         {
-            var result = _taskItemService.Delete(taskItem);
+            // Önce id ile nesneyi bulalım
+            var taskToDelete = _taskItemService.GetById(id).Data;
+            if (taskToDelete == null) return BadRequest("Görev bulunamadı.");
+
+            var result = _taskItemService.Delete(taskToDelete);
             if (result.Success) return Ok(result);
             return BadRequest(result);
         }

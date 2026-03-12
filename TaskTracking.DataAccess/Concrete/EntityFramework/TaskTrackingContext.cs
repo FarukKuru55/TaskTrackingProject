@@ -20,8 +20,16 @@ namespace TaskTracking.DataAccess.Concrete.EntityFramework
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // İleride Many-to-Many ilişkileri burada detaylandırabiliriz
             base.OnModelCreating(modelBuilder);
+
+            // 🚀 TÜM TABLOLARI KÜÇÜK HARFE ZORLA (MySQL hassasiyeti için)
+            modelBuilder.Entity<TaskItem>().ToTable("taskitems");
+            modelBuilder.Entity<Staff>().ToTable("staffs");
+            modelBuilder.Entity<Company>().ToTable("companies");
+            modelBuilder.Entity<TaskStaff>().ToTable("taskstaffs");
+            modelBuilder.Entity<Priority>().ToTable("priorities");
+            modelBuilder.Entity<Department>().ToTable("departments");
+            modelBuilder.Entity<TaskTracking.Core.Entities.Concrete.TaskStatus>().ToTable("taskstatuses");
         }
     }
 }

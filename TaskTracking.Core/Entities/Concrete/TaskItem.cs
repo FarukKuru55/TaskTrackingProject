@@ -11,6 +11,7 @@ namespace TaskTracking.Core.Entities.Concrete
         public string? DocumentUrl { get; set; } // Belge yolu (opsiyonel)
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? CompletedDate { get; set; }
+        public DateTime? DueDate { get; set; }
         public bool IsCompleted { get; set; } = false;
         public int PriorityId { get; set; }
         public int TaskStatusId { get; set; }
