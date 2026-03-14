@@ -27,7 +27,14 @@ namespace TaskTracking.WebApi.Controllers
         [HttpGet("gettaskdetails")]
         public IActionResult GetTaskDetails()
         {
+            // Sonundaki virgülü sildik! 🚀
             var result = _taskItemService.GetTaskDetails();
+
+            foreach (var task in result.Data)
+            {
+                System.Diagnostics.Debug.WriteLine($"GÖREV ID: {task.Id} - BAŞLIK: {task.Title} - TARİH: {task.DueDate}");
+            }
+
             if (result.Success) return Ok(result);
             return BadRequest(result);
         }

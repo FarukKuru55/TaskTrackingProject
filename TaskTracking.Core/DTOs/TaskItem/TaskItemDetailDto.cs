@@ -8,7 +8,7 @@ namespace TaskTracking.Core.DTOs.TaskItem
         public int Id { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
-        public DateTime DueDate { get; set; }
+        public DateTime? DueDate { get; set; }
         public string PriorityName { get; set; }
         public string TaskStatusName { get; set; }
         public string CompanyName { get; set; }

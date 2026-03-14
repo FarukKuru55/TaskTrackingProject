@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import api from './api/axiosInstance'
 import TaskList from './components/TaskList'
 import TaskAddModal from './components/TaskAddModal'
+import TaskCompleteModal from './components/TaskCompleteModal' // 🚀 IMPORT UNUTMA
 import 'bootstrap/dist/css/bootstrap.min.css'
 import Swal from 'sweetalert2'
 
@@ -9,6 +10,10 @@ function App() {
   const [tasks, setTasks] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
+
+  // 🚀 TAMAMLAMA MODALI İÇİN YENİ STATE'LER
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [pendingTask, setPendingTask] = useState(null);
 
   useEffect(() => { fetchTasks(); }, []);
 
@@ -21,86 +26,77 @@ function App() {
   const handleSaveTask = async (taskData) => {
     try {
       const payload = {
+        id: taskData.id ? Number(taskData.id) : 0,
         title: taskData.title,
         description: taskData.description,
         priorityId: Number(taskData.priorityId),
         taskStatusId: Number(taskData.taskStatusId),
         companyId: Number(taskData.companyId),
         staffIds: taskData.staffIds || [],
-        dueDate: taskData.dueDate  // Modal zaten ISO formatına çevirdi
+        dueDate: taskData.dueDate ? new Date(taskData.dueDate).toISOString() : null
       };
 
       let response;
-      if (taskData.id) {
-        payload.id = Number(taskData.id);
-        response = await api.put('/Tasks/update', payload);
-      } else {
-        response = await api.post('/Tasks/add', payload);
-      }
+      if (taskData.id) response = await api.put('/Tasks/update', payload);
+      else response = await api.post('/Tasks/add', payload);
 
       if (response.data.success) {
-        Swal.fire('Başarılı!', taskData.id ? 'Görev güncellendi.' : 'Görev eklendi.', 'success');
+        Swal.fire('Başarılı!', 'İşlem tamamlandı.', 'success');
         setShowModal(false);
         fetchTasks();
       }
     } catch (error) {
-      console.error("Hata:", error.response?.data || error);
-      Swal.fire('Hata!', 'İşlem sırasında bir sorun oluştu.', 'error');
+      Swal.fire('Hata!', 'İşlem başarısız.', 'error');
     }
   };
 
+  // 🚀 SÜRÜKLE-BIRAK VE TAMAMLAMA TETİKLEYİCİSİ
   const handleUpdateTaskStatus = (taskId, newStatusId) => {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
 
-    // 🕵️‍♂️ Backend staffIds bekliyor, bizdekine bakıyoruz
-    const staffIdsForBackend = task.assignedStaffIds || task.staffIds || [];
+    // Eğer ID 3 (Tamamlandı) ise modalı aç
+    if (Number(newStatusId) === 3) {
+      setPendingTask(task);
+      setShowCompleteModal(true);
+      return; 
+    }
 
+    // Değilse normal statü güncellemesi yap (Örn: Devam Ediyor'a çekme)
+    const staffIdsForBackend = task.assignedStaffIds || [];
     const payload = {
-      id: Number(task.id),
-      title: task.title,
-      description: task.description,
-      priorityId: Number(task.priorityId) || 1,
+      ...task,
       taskStatusId: Number(newStatusId),
-      companyId: Number(task.companyId) || 1,
-      staffIds: staffIdsForBackend, // İsim düzeltildi
-      // 🚀 Tarih 0001 ise bugünü gönder, yoksa ISO formatına çevir
-      dueDate: (task.dueDate && task.dueDate !== "0001-01-01T00:00:00") 
-               ? new Date(task.dueDate).toISOString() 
-               : new Date().toISOString()
+      staffIds: staffIdsForBackend,
+      dueDate: (task.dueDate && task.dueDate !== "0001-01-01T00:00:00") ? task.dueDate : null
     };
 
-    api.put('/Tasks/update', payload)
-      .then(res => { if (res.data.success) fetchTasks(); })
-      .catch(err => {
-        console.error("Sürükle-Bırak Hatası:", err.response?.data);
-        Swal.fire('Hata!', 'Statü güncellenemedi.', 'error');
-      });
+    api.put('/Tasks/update', payload).then(res => { if (res.data.success) fetchTasks(); });
+  };
+
+  // 🚀 MODAL ONAYLANDIĞINDA ÇALIŞACAK FONKSİYON
+  const handleFinalComplete = async (taskId, data) => {
+    try {
+      const payload = {
+        taskId: taskId,
+        staffId: pendingTask.assignedStaffIds[0] || 1, 
+        description: data.description,
+        documentUrl: data.documentUrl
+      };
+
+      const response = await api.post('/Tasks/completetask', payload);
+      if (response.data.success) {
+        Swal.fire('Tebrikler!', 'Görev başarıyla tamamlandı.', 'success');
+        setShowCompleteModal(false);
+        fetchTasks();
+      }
+    } catch (error) {
+      Swal.fire('Hata', 'Tamamlama sırasında sorun oluştu.', 'error');
+    }
   };
 
   const handleDeleteTask = (taskId) => {
-    Swal.fire({
-      title: 'Emin misin?',
-      text: "Bu görevi sildiğinde geri alamazsın!",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Evet, Sil!',
-      cancelButtonText: 'İptal'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        api.delete(`/Tasks/delete?id=${taskId}`) 
-          .then(res => {
-            if (res.data.success) {
-              Swal.fire('Silindi!', 'Görev başarıyla silindi.', 'success');
-              fetchTasks();
-            }
-          })
-          .catch(err => {
-            console.error("Silme hatası detay:", err.response?.data);
-            Swal.fire('Hata!', 'Görev silinirken bir sorun oluştu.', 'error');
-          });
-      }
-    });
+    api.delete(`/Tasks/delete?id=${taskId}`).then(res => { if (res.data.success) fetchTasks(); });
   };
 
   const handleEditTask = (task) => { setSelectedTask(task); setShowModal(true); };
@@ -115,16 +111,22 @@ function App() {
       <div className="container">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h2 className="fw-bold text-secondary">Görev Paneli</h2>
-          <button className="btn btn-primary shadow-sm px-4 fw-bold"
-            onClick={() => { setSelectedTask(null); setShowModal(true); }}>
+          <button className="btn btn-primary shadow-sm px-4 fw-bold" onClick={() => { setSelectedTask(null); setShowModal(true); }}>
             + Yeni Görev Ekle
           </button>
         </div>
-        <TaskList tasks={tasks} handleDeleteTask={handleDeleteTask}
-          handleEditTask={handleEditTask} handleUpdateTaskStatus={handleUpdateTaskStatus} />
+        <TaskList tasks={tasks} handleDeleteTask={handleDeleteTask} handleEditTask={handleEditTask} handleUpdateTaskStatus={handleUpdateTaskStatus} />
       </div>
-      <TaskAddModal show={showModal} handleClose={() => setShowModal(false)}
-        handleSave={handleSaveTask} selectedTask={selectedTask} />
+
+      <TaskAddModal show={showModal} handleClose={() => setShowModal(false)} handleSave={handleSaveTask} selectedTask={selectedTask} />
+      
+      {/* 🚀 TAMAMLAMA MODALINI BURADA ÇAĞIRIYORUZ */}
+      <TaskCompleteModal 
+        show={showCompleteModal} 
+        handleClose={() => setShowCompleteModal(false)} 
+        handleConfirm={handleFinalComplete} 
+        task={pendingTask} 
+      />
     </div>
   );
 }

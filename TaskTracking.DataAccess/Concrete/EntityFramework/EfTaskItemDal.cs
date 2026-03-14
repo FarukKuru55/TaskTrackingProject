@@ -5,61 +5,49 @@ using TaskTracking.Core.DTOs.TaskItem;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace TaskTracking.DataAccess.Concrete.EntityFramework
 {
     public class EfTaskItemDal : EfEntityRepositoryBase<TaskItem, TaskTrackingContext>, ITaskItemDal
     {
-        // 🚀 İsim çakışmasını önlemek için adını _dbContext yaptık (CS0108 uyarısı bitti)
-        private readonly TaskTrackingContext _dbContext;
+        private readonly TaskTrackingContext _context;
 
         public EfTaskItemDal(TaskTrackingContext context) : base(context)
         {
-            _dbContext = context;
+            _context = context;
         }
 
         public List<TaskItemDetailDto> GetTaskDetails()
         {
-            var rawTasks = _dbContext.TaskItems.ToList();
-            var dtoList = new List<TaskItemDetailDto>();
+            // 🚀 .AsNoTracking() sayesinde taze tarih verisini direkt SQL'den alıyoruz.
+            // Entity Framework'ün hafızadaki eski (0001-01-01) veriyi vermesini engeller.
+            return _context.TaskItems
+                .AsNoTracking()
+                .Select(t => new TaskItemDetailDto
+                {
+                    Id = t.Id,
+                    Title = t.Title ?? "",
+                    Description = t.Description ?? "",
+                    DueDate = t.DueDate, // Veritabanında NULL ise NULL, doluysa tarih gelir.
+                    PriorityId = t.PriorityId,
+                    PriorityName = _context.Priorities.FirstOrDefault(p => p.Id == t.PriorityId).Name ?? "Belirsiz",
+                    TaskStatusId = t.TaskStatusId,
+                    TaskStatusName = _context.TaskStatuses.FirstOrDefault(s => s.Id == t.TaskStatusId).Name ?? "Beklemede",
+                    CompanyId = t.CompanyId,
+                    CompanyName = _context.Companies.FirstOrDefault(c => c.Id == t.CompanyId).Name ?? "Şirket Yok",
 
-            foreach (var task in rawTasks)
-            {
-                var dto = new TaskItemDetailDto();
+                    // 🎯 PERSONEL ID'LERİ
+                    AssignedStaffIds = _context.TaskStaffs
+                        .Where(ts => ts.TaskItemId == t.Id)
+                        .Select(ts => ts.StaffId).ToList(),
 
-                dto.Id = task.Id;
-                dto.Title = task.Title ?? "Başlıksız";
-                dto.Description = task.Description ?? "";
-
-                // 🚀 DİKKAT: Veritabanında DueDate olmadığı için o eşleştirmeyi SİLDİK! (CS1061 hatası bitti)
-
-                dto.PriorityId = task.PriorityId;
-                dto.TaskStatusId = task.TaskStatusId;
-                dto.CompanyId = task.CompanyId;
-
-                var priority = _dbContext.Priorities.FirstOrDefault(p => p.Id == task.PriorityId);
-                dto.PriorityName = priority != null ? priority.Name : "Belirsiz";
-
-                var status = _dbContext.TaskStatuses.FirstOrDefault(s => s.Id == task.TaskStatusId);
-                dto.TaskStatusName = status != null ? status.Name : "Beklemede";
-
-                var company = _dbContext.Companies.FirstOrDefault(c => c.Id == task.CompanyId);
-                dto.CompanyName = company != null ? company.Name : "Şirket Yok";
-
-                dto.AssignedStaffIds = _dbContext.TaskStaffs
-                                               .Where(ts => ts.TaskItemId == task.Id)
-                                               .Select(ts => ts.StaffId)
-                                               .ToList();
-
-                dto.AssignedStaffs = (from ts in _dbContext.TaskStaffs
-                                      join st in _dbContext.Staffs on ts.StaffId equals st.Id
-                                      where ts.TaskItemId == task.Id
-                                      select st.FirstName).ToList();
-
-                dtoList.Add(dto);
-            }
-
-            return dtoList;
+                    // 🎯 PERSONEL İSİMLERİ (Performans için Select içinde Join)
+                    AssignedStaffs = (from ts in _context.TaskStaffs
+                                      join st in _context.Staffs on ts.StaffId equals st.Id
+                                      where ts.TaskItemId == t.Id
+                                      select st.FirstName).ToList()
+                }).ToList();
         }
     }
 }

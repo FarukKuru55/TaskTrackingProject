@@ -16,21 +16,32 @@ const TaskAddModal = ({ show, handleClose, handleSave, selectedTask }) => {
     if (show) {
       fetchDropdownData();
       if (selectedTask) {
-        // 🚀 TARİH FORMATLAMA OPERASYONU (Manuel ve Güvenli)
+        console.log("🛠️ MODAL AÇILDI, BACKEND'DEN GELEN HAM VERİ:", selectedTask);
+        
         let formattedDate = '';
+        
+        // 🚀 TARİH TAMİRİ BAŞLIYOR
         if (selectedTask.dueDate) {
-          const date = new Date(selectedTask.dueDate);
-          
-          // Geçerli bir tarih mi ve 0001 yılı değil mi kontrol et
-          if (!isNaN(date.getTime()) && date.getFullYear() > 1900) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
+          try {
+            // Backend'den gelen veriyi (string veya date) JS Date objesine çevir
+            const dateObj = new Date(selectedTask.dueDate);
             
-            // datetime-local tam olarak bu formatı bekler: 2026-03-12T18:30
-            formattedDate = `${year}-${month}-${day}T${hours}:${minutes}`;
+            // Eğer tarih geçerliyse ve 1900'den büyükse (0001 kontrolü)
+            if (!isNaN(dateObj.getTime()) && dateObj.getFullYear() > 1900) {
+              const pad = (n) => String(n).padStart(2, '0');
+              
+              const year = dateObj.getFullYear();
+              const month = pad(dateObj.getMonth() + 1);
+              const day = pad(dateObj.getDate());
+              const hours = pad(dateObj.getHours());
+              const minutes = pad(dateObj.getMinutes());
+
+              // datetime-local input'u için format: YYYY-MM-DDThh:mm
+              formattedDate = `${year}-${month}-${day}T${hours}:${minutes}`;
+              console.log("✅ FORMATLANMIŞ TARİH (Inputa giden):", formattedDate);
+            }
+          } catch (e) {
+            console.error("❌ Tarih formatlanırken hata:", e);
           }
         }
 
@@ -41,7 +52,7 @@ const TaskAddModal = ({ show, handleClose, handleSave, selectedTask }) => {
           priorityId: selectedTask.priorityId || '',
           taskStatusId: selectedTask.taskStatusId || '',
           companyId: selectedTask.companyId || '',
-          dueDate: formattedDate, 
+          dueDate: formattedDate, // Kutuyu dolduran asıl yer
           staffIds: selectedTask.assignedStaffIds || []
         });
       } else {

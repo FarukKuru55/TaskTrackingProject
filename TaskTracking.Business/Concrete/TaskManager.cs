@@ -34,7 +34,8 @@ namespace TaskTracking.Business.Concrete
                 Description = dto.Description,
                 PriorityId = dto.PriorityId,
                 TaskStatusId = dto.TaskStatusId,
-                CompanyId = dto.CompanyId, // Şirket ID'sini unutma şefim
+                CompanyId = dto.CompanyId,
+                DueDate = dto.DueDate,
                 CreatedDate = DateTime.Now,
                 IsCompleted = false
             };
@@ -116,7 +117,7 @@ namespace TaskTracking.Business.Concrete
             {
                 _taskStaffDal.Delete(staff);
             }
-
+        
             _taskItemDal.Delete(taskItem);
             return new SuccessResult("Görev ve bağlı personel kayıtları silindi.");
         }
