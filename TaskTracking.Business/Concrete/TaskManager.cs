@@ -127,15 +127,14 @@ namespace TaskTracking.Business.Concrete
             var task = _taskItemDal.GetByIdAsync(taskId).GetAwaiter().GetResult();
             if (task == null) return new ErrorResult("Görev bulunamadı!");
 
-            if (!CheckIfStaffAssignedToTask(taskId, staffId)) return new ErrorResult("Yetkisiz işlem!");
-
             task.Description = description;
             task.DocumentUrl = documentUrl;
             task.IsCompleted = true;
             task.CompletedDate = DateTime.Now;
+            task.TaskStatusId = 3; 
 
             _taskItemDal.Update(task);
-            return new SuccessResult("Görev tamamlandı.");
+            return new SuccessResult("Görev başarıyla tamamlandı.");
         }
 
         private bool CheckIfStaffAssignedToTask(int taskId, int staffId)

@@ -48,9 +48,9 @@ namespace TaskTracking.WebApi.Controllers
         }
 
         [HttpPost("completetask")]
-        public IActionResult CompleteTask(int taskId, int staffId, string description, string documentUrl)
+        public IActionResult CompleteTask([FromBody] TaskCompleteDto dto)
         {
-            var result = _taskItemService.CompleteTask(taskId, staffId, description, documentUrl);
+            var result = _taskItemService.CompleteTask(dto.TaskId, dto.StaffId, dto.Description, dto.DocumentUrl);
             if (result.Success) return Ok(result);
             return BadRequest(result);
         }
