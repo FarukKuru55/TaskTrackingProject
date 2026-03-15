@@ -12,6 +12,7 @@ namespace TaskTracking.Core.DTOs.TaskItem
         public string PriorityName { get; set; }
         public string TaskStatusName { get; set; }
         public string CompanyName { get; set; }
+        public string? DocumentUrl { get; set; }
 
         // ID'ler — güncelleme formunda lazım
         public int PriorityId { get; set; }

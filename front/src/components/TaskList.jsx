@@ -1,6 +1,6 @@
 import React from 'react';
 
-const TaskList = ({ tasks, handleDeleteTask, handleEditTask, handleUpdateTaskStatus }) => {
+const TaskList = ({ tasks, handleDeleteTask, handleEditTask, handleUpdateTaskStatus, handleShowDetail }) => {
 
   if (!tasks || tasks.length === 0) {
     return (
@@ -17,129 +17,109 @@ const TaskList = ({ tasks, handleDeleteTask, handleEditTask, handleUpdateTaskSta
     { id: 3, name: '✅ TAMAMLANDI', matchNames: ['tamamlandı'], color: 'bg-success', borderColor: '#198754' }
   ];
 
-  const handleDragStart = (e, taskId) => {
-    // Sürüklenen ID'yi kuryeye (dataTransfer) veriyoruz
-    e.dataTransfer.setData("taskId", taskId.toString());
-    e.currentTarget.style.opacity = '0.4'; // Sürüklenirken kart şeffaflaşsın (Çalıştığını anlarsın)
+  const getDueDateInfo = (dueDate) => {
+    if (!dueDate || dueDate.startsWith("0001")) return { text: "📅 Tarih Yok", color: "secondary" };
+    const now = new Date();
+    const deadline = new Date(dueDate);
+    const diffDays = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) return { text: `⚠️ Gecikti (${Math.abs(diffDays)} gün)`, color: "danger" };
+    if (diffDays === 0) return { text: "⏳ Bugün Son!", color: "warning" };
+    if (diffDays <= 2) return { text: `🕒 ${diffDays} gün kaldı`, color: "warning" };
+    return { text: `📅 ${deadline.toLocaleDateString('tr-TR')}`, color: "info" };
   };
 
-  const handleDragEnd = (e) => {
-    e.currentTarget.style.opacity = '1'; // Sürükleme bitince kartı eski haline getir
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault(); // Bu satır olmazsa DROP çalışmaz!
-    e.dataTransfer.dropEffect = "move";
-  };
-
+  const handleDragStart = (e, taskId) => { e.dataTransfer.setData("taskId", taskId.toString()); e.currentTarget.style.opacity = '0.4'; };
+  const handleDragEnd = (e) => { e.currentTarget.style.opacity = '1'; };
+  const handleDragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; };
+  
   const handleDrop = (e, newStatusId) => {
     e.preventDefault();
     const draggedTaskId = e.dataTransfer.getData("taskId");
-    
-    if (draggedTaskId) {
-      console.log(`🚀 Kart No: ${draggedTaskId} -> Yeni Kolon ID: ${newStatusId}`);
-      handleUpdateTaskStatus(parseInt(draggedTaskId), newStatusId);
-    }
+    if (draggedTaskId) handleUpdateTaskStatus(parseInt(draggedTaskId), newStatusId);
   };
 
   return (
     <div className="row g-4">
       {columns.map(column => {
-        const columnTasks = tasks.filter(task => {
-          const statusName = task.taskStatusName ? task.taskStatusName.toLowerCase().trim() : "";
-          return column.matchNames.includes(statusName);
-        });
+        const columnTasks = tasks.filter(task => column.matchNames.includes(task.taskStatusName?.toLowerCase().trim()));
 
         return (
           <div className="col-md-4" key={column.id}>
-            {/* Kolon Başlığı */}
             <div className={`p-2 ${column.color} text-white rounded-top shadow-sm text-center fw-bold d-flex justify-content-between align-items-center px-3`}>
               <span>{column.name}</span>
               <span className="badge bg-white text-dark rounded-pill">{columnTasks.length}</span>
             </div>
 
-            {/* Sürüklenebilir Alan (Droppable) */}
             <div
-              className="p-3 rounded-bottom bg-light border-start border-end border-bottom shadow-sm"
-              style={{ minHeight: '75vh', transition: 'background-color 0.2s' }}
+              className="p-3 rounded-bottom bg-light border shadow-sm"
+              style={{ minHeight: '75vh' }}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, column.id)}
             >
-              {columnTasks.map(task => (
-                <div
-                  className="card border-0 shadow-sm mb-3 task-card"
-                  key={task.id}
-                  style={{ 
-                    borderLeft: `5px solid ${column.borderColor}`, 
-                    cursor: 'grab',
-                    userSelect: 'none' // Yazıların seçilmesini engelleyelim ki sürükleme kolay olsun
-                  }}
-                  draggable="true" // 🚀 ÖNEMLİ: string "true" olması daha garantidir
-                  onDragStart={(e) => handleDragStart(e, task.id)}
-                  onDragEnd={handleDragEnd}
-                >
-                  {/* Kart İçeriği (Header, Body, Footer aynı kalıyor) */}
-                  <div className="card-header bg-white border-0 pt-3">
-                    <span className={`badge float-end ${
-                      task.priorityName === 'Yüksek' ? 'bg-danger' :
-                      task.priorityName === 'Orta' ? 'bg-warning text-dark' : 'bg-info'
-                    }`}>
-                      {task.priorityName || "Belirsiz"}
-                    </span>
-                  </div>
+              {columnTasks.map(task => {
+                const dateInfo = getDueDateInfo(task.dueDate);
 
-                  <div className="card-body py-2">
-                    <h6 className="card-title fw-bold text-dark mb-1">{task.title}</h6>
-                    <p className="card-text text-muted mb-0" style={{ fontSize: '0.85rem', lineHeight: '1.2rem' }}>
-                      {task.description && task.description.length > 80
-                        ? task.description.substring(0, 80) + "..."
-                        : task.description}
-                    </p>
-                  </div>
+                return (
+                  <div className="card border-0 shadow-sm mb-3 task-card" key={task.id} 
+                    style={{ borderLeft: `5px solid ${column.borderColor}`, cursor: 'grab' }}
+                    draggable="true" onDragStart={(e) => handleDragStart(e, task.id)} onDragEnd={handleDragEnd}
+                  >
+                    <div className="card-header bg-white border-0 pt-3 d-flex justify-content-between">
+                      <span className="badge bg-light text-dark border small">🆔 #{task.id}</span>
+                      <span className={`badge ${task.priorityName === 'Yüksek' ? 'bg-danger' : 'bg-warning text-dark'}`}>{task.priorityName}</span>
+                    </div>
 
-                  <div className="card-footer bg-white border-0 pb-3 mt-1">
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                      <div>
-                        <span className="badge rounded-pill bg-success-subtle text-success border border-success">
-                          {task.taskStatusName || "Belirsiz"}
-                        </span>
-                      </div>
-                      
-                      {/* Personel Avatarları */}
-                      <div className="d-flex align-items-center">
-                        {task.assignedStaffs && task.assignedStaffs.length > 0 ? (
-                          task.assignedStaffs.map((staff, idx) => (
-                            <div 
-                              key={idx} 
-                              className="rounded-circle bg-dark text-white d-flex justify-content-center align-items-center border border-2 border-white shadow-sm fw-bold" 
-                              style={{ width: '32px', height: '32px', fontSize: '0.75rem', marginLeft: idx > 0 ? '-12px' : '0', zIndex: 10 - idx }}
-                              title={staff}
-                            >
-                              {staff.substring(0, 2).toUpperCase()}
+                    <div className="card-body py-2">
+                    
+                        <h6 
+                        className="card-title fw-bold text-dark mb-1 flex-grow-1" 
+                        style={{ cursor: 'pointer' }}
+                        onClick={(e) => { e.stopPropagation(); handleShowDetail(task); }}
+                      >
+                        {task.title}
+                      </h6>
+                      <button 
+                        className="btn btn-link btn-sm p-0 text-muted shadow-none"
+                        onClick={(e) => { e.stopPropagation(); handleShowDetail(task); }}
+                        title="Detayları Gör"
+                      >
+                        🔍
+                      </button>
+                      <p className="card-text text-muted mb-0 small" style={{fontSize: '0.8rem'}}>
+                        {task.description?.length > 60 ? task.description.substring(0, 60) + "..." : task.description}
+                      </p>
+                      <div className="mt-2 text-primary fw-bold small">🏢 {task.companyName}</div>
+                    </div>
+
+                    <div className="card-footer bg-white border-0 pb-3">
+                      <div className="d-flex justify-content-between align-items-center mb-3 pt-2 border-top">
+                        <span className={`badge bg-${dateInfo.color} shadow-sm`}>{dateInfo.text}</span>
+                        <div className="d-flex">
+                          {task.assignedStaffs?.map((s, i) => (
+                            <div key={i} className="rounded-circle bg-dark text-white d-flex justify-content-center align-items-center border border-2 border-white fw-bold" 
+                              style={{ width: '28px', height: '28px', fontSize: '0.6rem', marginLeft: i > 0 ? '-10px' : '0' }} title={s}>
+                              {s.substring(0,2).toUpperCase()}
                             </div>
-                          ))
-                        ) : (
-                          <div className="rounded-circle bg-light text-secondary d-flex justify-content-center align-items-center border border-2 border-white shadow-sm" style={{ width: '32px', height: '32px' }}>
-                            👤
-                          </div>
-                        )}
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Çözüm Linki Butonu */}
+                      {task.taskStatusId === 3 && (task.documentUrl || task.DocumentUrl) && (
+                        <div className="mb-2">
+                          <a href={(task.documentUrl || task.DocumentUrl).startsWith('http') ? (task.documentUrl || task.DocumentUrl) : `https://${(task.documentUrl || task.DocumentUrl)}`} 
+                             target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-success w-100 fw-bold">🔗 Çözüm Linki</a>
+                        </div>
+                      )}
+
+                      <div className="d-flex gap-2">
+                        <button className="btn btn-sm btn-outline-primary w-50" onClick={() => handleEditTask(task)}>✏️ Düzenle</button>
+                        <button className="btn btn-sm btn-outline-danger w-50" onClick={() => handleDeleteTask(task.id)}>🗑️ Sil</button>
                       </div>
                     </div>
-
-                    <div className="d-flex gap-2">
-                      <button className="btn btn-sm btn-outline-primary w-50 fw-bold" onClick={() => handleEditTask(task)}>✏️ Düzenle</button>
-                      <button className="btn btn-sm btn-outline-danger w-50 fw-bold" onClick={() => handleDeleteTask(task.id)}>🗑️ Sil</button>
-                    </div>
                   </div>
-                </div>
-              ))}
-
-              {columnTasks.length === 0 && (
-                <div className="text-center py-5 mt-4 opacity-50 rounded" style={{ border: '2px dashed #ccc' }}>
-                  <span className="d-block fs-3 mb-2">☕</span>
-                  <span className="small fw-bold">Şimdilik görev yok</span>
-                </div>
-              )}
+                );
+              })}
             </div>
           </div>
         );

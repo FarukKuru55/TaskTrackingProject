@@ -34,6 +34,7 @@ namespace TaskTracking.DataAccess.Concrete.EntityFramework
                     TaskStatusId = t.TaskStatusId,
                     TaskStatusName = _context.TaskStatuses.FirstOrDefault(s => s.Id == t.TaskStatusId).Name ?? "Beklemede",
                     CompanyId = t.CompanyId,
+                    DocumentUrl = t.DocumentUrl,
                     CompanyName = _context.Companies.FirstOrDefault(c => c.Id == t.CompanyId).Name ?? "Şirket Yok",
 
                     AssignedStaffIds = _context.TaskStaffs
