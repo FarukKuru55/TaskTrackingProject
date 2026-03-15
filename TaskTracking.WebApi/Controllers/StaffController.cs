@@ -31,7 +31,7 @@ namespace TaskTracking.WebApi.Controllers
             return BadRequest(result);
         }
 
-        [HttpPut("u bapdate")]
+        [HttpPut("update")]
         public IActionResult Update(Staff staff)
         {
             var result = _staffService.Update(staff);
@@ -40,9 +40,13 @@ namespace TaskTracking.WebApi.Controllers
         }
 
         [HttpDelete("delete")]
-        public IActionResult Delete (Staff staff)
+        public IActionResult Delete([FromQuery] int id)
         {
-            var result = _staffService.Delete(staff);
+            // 🚀 DÜZELTME: '_companyService' yerine '_staffService' kullanıyoruz
+            // Ve 'Company' nesnesi yerine 'Staff' nesnesi oluşturuyoruz
+            var staffToDelete = new Staff { Id = id };
+
+            var result = _staffService.Delete(staffToDelete);
             if (result.Success) return Ok(result);
             return BadRequest(result);
         }

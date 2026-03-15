@@ -12,37 +12,20 @@ const TaskAddModal = ({ show, handleClose, handleSave, selectedTask }) => {
   const [statuses, setStatuses] = useState([]);
   const [staffs, setStaffs] = useState([]);
 
- useEffect(() => {
+  useEffect(() => {
     if (show) {
       fetchDropdownData();
       if (selectedTask) {
-        console.log("🛠️ MODAL AÇILDI, BACKEND'DEN GELEN HAM VERİ:", selectedTask);
-        
+        // ... Mevcut tarih tamiri kodların (Aynen korundu) ...
         let formattedDate = '';
-        
-        // 🚀 TARİH TAMİRİ BAŞLIYOR
         if (selectedTask.dueDate) {
           try {
-            // Backend'den gelen veriyi (string veya date) JS Date objesine çevir
             const dateObj = new Date(selectedTask.dueDate);
-            
-            // Eğer tarih geçerliyse ve 1900'den büyükse (0001 kontrolü)
             if (!isNaN(dateObj.getTime()) && dateObj.getFullYear() > 1900) {
               const pad = (n) => String(n).padStart(2, '0');
-              
-              const year = dateObj.getFullYear();
-              const month = pad(dateObj.getMonth() + 1);
-              const day = pad(dateObj.getDate());
-              const hours = pad(dateObj.getHours());
-              const minutes = pad(dateObj.getMinutes());
-
-              // datetime-local input'u için format: YYYY-MM-DDThh:mm
-              formattedDate = `${year}-${month}-${day}T${hours}:${minutes}`;
-              console.log("✅ FORMATLANMIŞ TARİH (Inputa giden):", formattedDate);
+              formattedDate = `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(dateObj.getDate())}T${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}`;
             }
-          } catch (e) {
-            console.error("❌ Tarih formatlanırken hata:", e);
-          }
+          } catch (e) { console.error(e); }
         }
 
         setFormData({
@@ -52,7 +35,7 @@ const TaskAddModal = ({ show, handleClose, handleSave, selectedTask }) => {
           priorityId: selectedTask.priorityId || '',
           taskStatusId: selectedTask.taskStatusId || '',
           companyId: selectedTask.companyId || '',
-          dueDate: formattedDate, // Kutuyu dolduran asıl yer
+          dueDate: formattedDate,
           staffIds: selectedTask.assignedStaffIds || []
         });
       } else {
@@ -66,20 +49,22 @@ const TaskAddModal = ({ show, handleClose, handleSave, selectedTask }) => {
       const [compRes, prioRes, statRes, staffRes] = await Promise.all([
         api.get('/Companies/getall'),
         api.get('/Priorities/getall'),
-        api.get('/TaskStatus/getall'),
+        api.get('/TaskStatuses/getall'), // 🚀 Düzeltme: TaskStatus -> TaskStatuses
         api.get('/Staffs/getall')
       ]);
-      setCompanies(compRes.data.data);
-      setPriorities(prioRes.data.data);
-      setStatuses(statRes.data.data);
-      setStaffs(staffRes.data.data);
+      
+      setCompanies(compRes.data.data || []);
+      setPriorities(prioRes.data.data || []);
+      setStatuses(statRes.data.data || []);
+      setStaffs(staffRes.data.data || []);
 
+      // Yeni kayıt açılıyorsa varsayılan değerleri ata
       if (!selectedTask) {
         setFormData(prev => ({
           ...prev,
-          priorityId: prev.priorityId || (prioRes.data.data.length > 0 ? prioRes.data.data[0].id : ''),
-          taskStatusId: prev.taskStatusId || (statRes.data.data.length > 0 ? statRes.data.data[0].id : ''),
-          companyId: prev.companyId || (compRes.data.data.length > 0 ? compRes.data.data[0].id : '')
+          priorityId: prioRes.data.data?.[0]?.id || '',
+          taskStatusId: statRes.data.data?.[0]?.id || '',
+          companyId: compRes.data.data?.[0]?.id || ''
         }));
       }
     } catch (error) {
@@ -94,72 +79,62 @@ const TaskAddModal = ({ show, handleClose, handleSave, selectedTask }) => {
 
   const handleCheckboxChange = (staffId) => {
     setFormData((prev) => {
-      const currentStaffs = prev.staffIds;
-      if (currentStaffs.includes(staffId)) {
-        return { ...prev, staffIds: currentStaffs.filter(id => id !== staffId) };
-      } else {
-        return { ...prev, staffIds: [...currentStaffs, staffId] };
-      }
+      const currentStaffs = prev.staffIds || [];
+      return currentStaffs.includes(staffId) 
+        ? { ...prev, staffIds: currentStaffs.filter(id => id !== staffId) }
+        : { ...prev, staffIds: [...currentStaffs, staffId] };
     });
   };
 
   const onSubmit = (e) => {
     e.preventDefault();
     const finalData = {
-      title: formData.title,
-      description: formData.description,
-      priorityId: parseInt(formData.priorityId) || 1,
-      taskStatusId: parseInt(formData.taskStatusId) || 1,
-      companyId: parseInt(formData.companyId) || 1,
+      ...formData,
+      priorityId: parseInt(formData.priorityId),
+      taskStatusId: parseInt(formData.taskStatusId),
+      companyId: parseInt(formData.companyId),
       dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : new Date().toISOString(),
-      staffIds: formData.staffIds
     };
-    if (selectedTask) finalData.id = formData.id;
     handleSave(finalData);
-    setFormData({ title: '', description: '', priorityId: '', taskStatusId: '', dueDate: '', companyId: '', staffIds: [] });
   };
 
   if (!show) return null;
 
   return (
-    <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+    <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
       <div className="modal-dialog modal-dialog-centered modal-lg">
         <div className="modal-content border-0 shadow-lg">
           <div className="modal-header bg-primary text-white">
-            <h5 className="modal-title fw-bold">
-              {selectedTask ? '✏️ Görevi Düzenle' : '✨ Yeni Görev Oluştur'}
-            </h5>
+            <h5 className="modal-title fw-bold">{selectedTask ? '✏️ Görevi Düzenle' : '✨ Yeni Görev Oluştur'}</h5>
             <button type="button" className="btn-close btn-close-white" onClick={handleClose}></button>
           </div>
           <form onSubmit={onSubmit}>
-            <div className="modal-body">
+            <div className="modal-body p-4">
               <div className="mb-3">
                 <label className="form-label fw-bold">Görev Başlığı</label>
-                <input type="text" className="form-control" name="title" value={formData.title} onChange={handleChange} required placeholder="Örn: Veritabanı Optimizasyonu" />
+                <input type="text" className="form-control" name="title" value={formData.title} onChange={handleChange} required />
               </div>
               <div className="mb-3">
                 <label className="form-label fw-bold">Açıklama</label>
-                <textarea className="form-control" name="description" value={formData.description} onChange={handleChange} rows="3" required placeholder="Görevin detaylarını yazın..."></textarea>
+                <textarea className="form-control" name="description" value={formData.description} onChange={handleChange} rows="3" required></textarea>
               </div>
+              
               <div className="mb-3">
                 <label className="form-label fw-bold">Görevli Personeller</label>
-                <div className="border rounded p-2 bg-white" style={{ maxHeight: '120px', overflowY: 'auto' }}>
-                  {staffs.length === 0 ? (
-                    <small className="text-muted">Kayıtlı personel bulunamadı.</small>
-                  ) : (
-                    staffs.map(staff => (
-                      <div className="form-check" key={staff.id}>
-                        <input className="form-check-input" type="checkbox" id={`staff-${staff.id}`}
-                          checked={formData.staffIds.includes(staff.id)}
-                          onChange={() => handleCheckboxChange(staff.id)} />
-                        <label className="form-check-label w-100" htmlFor={`staff-${staff.id}`}>
-                          {staff.firstName} {staff.lastName} <small className="text-muted">({staff.position})</small>
-                        </label>
-                      </div>
-                    ))
-                  )}
+                <div className="border rounded p-3 bg-light" style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                  {staffs.map(staff => (
+                    <div className="form-check mb-2" key={staff.id}>
+                      <input className="form-check-input" type="checkbox" id={`staff-${staff.id}`}
+                        checked={formData.staffIds?.includes(staff.id)}
+                        onChange={() => handleCheckboxChange(staff.id)} />
+                      <label className="form-check-label" htmlFor={`staff-${staff.id}`}>
+                         {staff.firstName} {staff.lastName} <small className="text-muted">- {staff.position}</small>
+                      </label>
+                    </div>
+                  ))}
                 </div>
               </div>
+
               <div className="row">
                 <div className="col-md-6 mb-3">
                   <label className="form-label fw-bold">Öncelik</label>
@@ -174,6 +149,7 @@ const TaskAddModal = ({ show, handleClose, handleSave, selectedTask }) => {
                   </select>
                 </div>
               </div>
+
               <div className="row">
                 <div className="col-md-6 mb-3">
                   <label className="form-label fw-bold">Şirket / Departman</label>
@@ -188,10 +164,8 @@ const TaskAddModal = ({ show, handleClose, handleSave, selectedTask }) => {
               </div>
             </div>
             <div className="modal-footer bg-light">
-              <button type="button" className="btn btn-secondary" onClick={handleClose}>İptal</button>
-              <button type="submit" className="btn btn-primary fw-bold px-4">
-                {selectedTask ? 'Güncelle' : 'Oluştur'}
-              </button>
+              <button type="button" className="btn btn-link text-muted" onClick={handleClose}>Vazgeç</button>
+              <button type="submit" className="btn btn-primary px-5 fw-bold">{selectedTask ? 'Güncelle' : 'Görevi Oluştur'}</button>
             </div>
           </form>
         </div>

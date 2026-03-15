@@ -1,49 +1,82 @@
-/* Jira Style Task Card Animations */
+/* --- GENEL SAYFA YAPISI --- */
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+.d-flex {
+  display: flex;
+}
+
+/* --- SIDEBAR (SOL MENÜ) --- */
+.sidebar {
+  min-width: 260px;
+  max-width: 260px;
+  background: #1a1d20; /* Koyu Kurumsal Arka Plan */
+  min-height: 100vh;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  border-right: 1px solid #2d3238;
+}
+
+.sidebar .nav-link {
+  color: #adb5bd !important;
+  font-weight: 500;
+  padding: 15px 25px;
+  transition: all 0.2s ease;
+  display: block;
+  text-decoration: none;
+  border-left: 5px solid transparent;
+}
+
+.sidebar .nav-link:hover {
+  background: #2b3035;
+  color: white !important;
+}
+
+.sidebar .nav-link.active {
+  background: #0d6efd; /* Seçili sekme mavi */
+  color: white !important;
+  border-left: 5px solid #fff; /* Seçili olduğunu belirten beyaz çizgi */
+}
+
+/* --- İÇERİK ALANI --- */
+.content-area {
+  flex-grow: 1;
+  width: 100%;
+  min-height: 100vh;
+  overflow-y: auto;
+  background-color: #f8f9fa;
+}
+
+/* --- JIRA STİLİ GÖREV KARTLARI --- */
 .task-card {
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border: 1px solid rgba(0,0,0,0.05);
 }
 
 .task-card:hover {
-  transform: translateY(-5px) scale(1.02);
+  transform: translateY(-5px) scale(1.01);
   box-shadow: 0 10px 20px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06) !important;
-  z-index: 100;
+  z-index: 10;
+  background-color: #fff;
 }
 
 /* Sürükleme başladığında efekt */
 .task-card:active {
   cursor: grabbing;
-  transform: scale(0.95);
-  opacity: 0.6;
+  transform: scale(0.98);
+  opacity: 0.7;
 }
 
-/* Kolon geçiş yumuşatması */
+/* Kolon geçiş yumuşatması (Sürükleyip bırakırken arka plan rengi değişimi için) */
 .rounded-bottom {
   transition: background-color 0.3s ease;
 }
 
-.sidebar {
-  min-width: 250px;
-  max-width: 250px;
-  background: #212529;
-  color: white;
-  min-height: 100vh;
-  transition: all 0.3s;
-}
-
-.sidebar .nav-link {
-  color: rgba(255,255,255,0.7);
-  padding: 15px 20px;
-  border-radius: 0;
-  transition: 0.3s;
-}
-
-.sidebar .nav-link:hover, .sidebar .nav-link.active {
-  background: #343a40;
-  color: white;
-  border-left: 4px solid #0d6efd;
-}
-
-.content-area {
-  width: 100%;
-  overflow-y: auto;
+/* --- TABLO STİLLERİ (Şirket/Personel Sayfaları İçin) --- */
+.table-hover tbody tr:hover {
+  background-color: rgba(13, 110, 253, 0.05);
+  transition: 0.2s;
 }
